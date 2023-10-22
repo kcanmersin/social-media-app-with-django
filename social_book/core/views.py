@@ -1,4 +1,4 @@
-from .models import Post, Profile ,LikePost
+from .models import Post, Profile ,LikePost,FollowersCount
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.models import User,auth
@@ -40,11 +40,43 @@ def profile(request,pk):
     user_post=Post.objects.filter(user=pk)
     user_post_length=len(user_post)
 
+    follower = request.user.username
+    user=pk
+    if FollowersCount.objects.filter(follower=follower,user=user).first():
+        button_text='Unfollow'
+    else:
+        button_text='Follow'
+
+    user_followers=len(FollowersCount.objects.filter(user=pk))
+    user_following=len(FollowersCount.objects.filter(following=pk))
+                 
+
+
+
     context ={'user_object':user_object,
                "user_profile":user_profile,
                "user_post":user_post,
-               "user_post_length":user_post_length}
+               "user_post_length":user_post_length,
+               "user_followers":user_followers,
+               "user_following":user_following,
+               }
     return render(request,'profile.html',context)
+@login_required(login_url='signin')
+def follow(request):
+    if request.method=='POST':
+        follower = request.POST['follower']
+        user=request.POST['user']
+        if FollowersCount.objects.filter(follower=follower,user=user).first():
+            delete_follower=FollowersCount.objects.get(follower=follower,user=user)
+            delete_follower.delete()
+            return redirect('/profile'+user)
+        else:
+            new_follower= FollowersCount.objects.create(follower=follower,user=user)
+            new_follower.save()
+            return redirect('/profile'+user)     
+
+    else:
+        return redirect('/')
 def upload(request):
     if request.method=='POST':
         user=request.user.username
