@@ -15,7 +15,7 @@ def index(request):
     return render(request,'index.html',{"user_profile":user_profile,"posts":posts})
 @login_required(login_url='signin')
 
-def like_post(request):
+def like_post(request):  
     username=request.user.username
     post_id=request.GET.get('post_id')
 
@@ -32,8 +32,19 @@ def like_post(request):
         post.no_of_likes-=1
         post.save()
         return redirect('/')
+@login_required(login_url='signin')
 
+def profile(request,pk):
+    user_object=User.objects.get(username=pk)
+    user_profile=Profile.objects.get(user=user_object)
+    user_post=Post.objects.filter(user=pk)
+    user_post_length=len(user_post)
 
+    context ={'user_object':user_object,
+               "user_profile":user_profile,
+               "user_post":user_post,
+               "user_post_length":user_post_length}
+    return render(request,'profile.html',context)
 def upload(request):
     if request.method=='POST':
         user=request.user.username
